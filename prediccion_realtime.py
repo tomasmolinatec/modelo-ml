@@ -269,9 +269,28 @@ def ejecutar_prediccion(model_regresor, model_clasificador, mapa_tri_interaccion
         df_rutas['distanciaKm'] = df_rutas['distanciaKm'].replace({np.nan: None})
         rutas_list = df_rutas.to_dict(orient='records')
 
-    # Retorno simplificado sin métricas de rendimiento globales
+    df_criticas = df_realtime[df_realtime['estado_predicho'].isin([0, 3])].copy()
+    total_compensado, total_necesitado = 0, 0
+    for zona, grupo in df_criticas.groupby('zona_logistica'):
+        demand_llenar = grupo[grupo['unidades_requeridas'] > 0]['unidades_requeridas'].sum()
+        total_compensado += min(demand_llenar, abs(grupo[grupo['unidades_requeridas'] < 0]['unidades_requeridas'].sum()))
+        total_necesitado += demand_llenar
+
+    distancia_local = df_rutas['distanciaKm'].dropna().sum() if not df_rutas.empty else 0.0
+    flota_resumen = df_rutas['vehiculoAsignado'].value_counts().to_dict() if not df_rutas.empty else {}
+
+    metricas = {
+        "green_logistics": {
+            "movimientos_mitigados_unidades": int(total_compensado),
+            "eficiencia_rebalanceo_local_pct": round((total_compensado / total_necesitado * 100), 2) if total_necesitado > 0 else 0.0,
+            "distancia_total_optimizada_local_km": round(distancia_local, 2)
+        },
+        "flota_resumen": flota_resumen
+    }
+
     return {
         "status": "success",
         "timestamp_evaluacion": ts_reciente.strftime('%Y-%m-%d %H:%M:%S.%f'),
+        "metricas_globales": metricas,
         "hoja_de_ruta": rutas_list
     }
