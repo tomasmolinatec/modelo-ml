@@ -189,7 +189,7 @@ def ejecutar_prediccion(model_regresor, model_clasificador, mapa_tri_interaccion
     distancia_local = df_rutas['Distancia (Km)'].dropna().sum() if not df_rutas.empty else 0.0
 
     metricas = {
-        "model_performance": {"accuracy_semaforo_pct": 89.4, "mae_volumen_bicicletas": 1.45},
+        "model_performance": {"accuracy_semaforo_pct": 0.82, "mae_volumen_bicicletas": 2.51},
         "green_logistics": {
             "movimientos_mitigados_unidades": int(total_compensado),
             "eficiencia_rebalanceo_local_pct": round((total_compensado / total_necesitado * 100), 2) if total_necesitado > 0 else 0.0,
